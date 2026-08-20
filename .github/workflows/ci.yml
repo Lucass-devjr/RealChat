@@ -1,44 +1,43 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
-    branches: [main, master]
+    branches: [master, main]
   pull_request:
-    branches: [main, master]
+    branches: [master, main]
 
 jobs:
   ci:
     runs-on: ubuntu-latest
-
-    env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-
+          node-version: '20'
+          cache: 'npm'
       - name: Install dependencies
         run: npm ci
-
-      - name: Generate Prisma client
+      - name: Generate Prisma Client
         run: npx prisma generate
-
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/realchat
       - name: Lint
         run: npm run lint
-
-      - name: Typecheck
+      - name: Type Check
         run: npm run typecheck
-
-      - name: Unit Tests
+      - name: Test
         run: npm run test
-
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/realchat
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-key-for-test
+          NEXTAUTH_SECRET: placeholder-secret-for-test
       - name: Build
         run: npm run build
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/realchat
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-key-for-build
+          NEXTAUTH_SECRET: placeholder-secret-for-build
